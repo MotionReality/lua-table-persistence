@@ -15,19 +15,29 @@ local write, writeIndent, writers, refCount;
 
 persistence =
 {
-	store = function (path, ...)
-		local openedFile, file, e;
-		if type(path) == "string" then
+	store = function (pathOrFile, ...)
+
+		if type(pathOrFile) == "string" then
 			-- Path, open a file
-			openedFile, e = io.open(path, "w");
+			local openedFile, e = io.open(pathOrFile, "w");
 			if not openedFile then
 				return error(e);
-			end
-			file = openedFile;
-		else
-			-- Just treat it as file
-			file = path;
+			end;
+			
+			local result = pcall( openedFile, ... );
+			
+			openedFile:close();
+			
+			if (not result) or (not result[1]) then
+				error( result and result[2] );
+			end;
+			
+			return table.remove(result,1);
 		end
+		
+		-- Just treat it as file
+		local file = pathOrFile;
+
 		local n = select("#", ...);
 		-- Count references
 		local objRefCount = {}; -- Stores reference that will be exported
@@ -74,9 +84,6 @@ persistence =
 		else
 			file:write("return\n");
 		end;
-		if openedFile then
-			openedFile:close();
-		end
 	end;
 
 	load = function (path)
