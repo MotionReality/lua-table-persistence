@@ -16,13 +16,14 @@ local write, writeIndent, writers, refCount;
 persistence =
 {
 	store = function (path, ...)
-		local file, e;
+		local openedFile, file, e;
 		if type(path) == "string" then
 			-- Path, open a file
-			file, e = io.open(path, "w");
-			if not file then
+			openedFile, e = io.open(path, "w");
+			if not openedFile then
 				return error(e);
 			end
+			file = openedFile;
 		else
 			-- Just treat it as file
 			file = path;
@@ -73,7 +74,9 @@ persistence =
 		else
 			file:write("return\n");
 		end;
-		file:close();
+		if openedFile then
+			openedFile:close();
+		end
 	end;
 
 	load = function (path)
