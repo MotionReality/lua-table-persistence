@@ -18,21 +18,18 @@ persistence =
 	store = function (pathOrFile, ...)
 
 		if type(pathOrFile) == "string" then
+			local openedFile, result, e;
 			-- Path, open a file
-			local openedFile, e = io.open(pathOrFile, "w");
+			openedFile = io.open(pathOrFile, "w");
 			if not openedFile then
 				return error(e);
 			end;
-			
-			local result = pcall( openedFile, ... );
-			
+			local result, e = pcall(store, openedFile, ...);
 			openedFile:close();
-			
-			if (not result) or (not result[1]) then
-				error( result and result[2] );
+			if not result then
+				return error(e);
 			end;
-			
-			return table.remove(result,1);
+			return;
 		end
 		
 		-- Just treat it as file
